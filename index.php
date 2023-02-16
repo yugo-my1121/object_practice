@@ -79,11 +79,18 @@
     public function getMagicAttack(){
       return $this -> magicAttack;
     }
-    // 魔法攻撃力が増えることはない前提として、セッターは作らない（読み取り専用）
-    public function magicAttack(){
-      $_SESSION['history'] .= $this->name.'の魔法攻撃!!<br>';
-      $_SESSION['myhp'] -= $this->magicAttack;
-      $_SESSION['history'] .= $this->magicAttack.'ポイントのダメージを受けた!<br>';
+    // attackメソッドをオーバーライドすることで、「ゲーム進行を管理する処理側」は単にattackメソッドを呼べばいいだけになる
+    // 魔法を使えるモンスターは、自分で魔法を出すか普通に攻撃するかを判断する
+    public function attack(){
+      $attackPoint = $this->attack;
+      if(!mt_rand(0,4)){//5分の1の確率で魔法攻撃
+        $_SESSION['history'] .= $this->name.'の魔法攻撃!!<br>';
+        $_SESSION['myhp'] -= $this->magicAttack;
+        $_SESSION['history'] .= $this->magicAttack.'ポイントのダメージを受けた!<br>';
+      }else{
+        // 通常の攻撃の場合は、親クラスの攻撃メソッドを使うことで、親クラスの攻撃メソッドが修正されてもMagicMonsterでも反映される
+        parent::attack();
+      }
     }
   }
 
@@ -134,17 +141,6 @@
 
         //モンスターから攻撃を受ける
         $_SESSION['monster'] ->attack();
-        //魔法攻撃の行えるモンスターなら
-        if($_SESSION['monster'] instanceof MagicMonster){
-          if(!mt_rand(0,4)){//5分の1の確率で
-            $_SESSION['monster'] -> magicAttack();
-          }else{
-            $_SESSION['monster']->attack();
-          }
-
-        }else{//普通のモンスターならただ攻撃するだけ
-          $_SESSION['monster']->attack();
-        }
 
         //hpが0以下になったらゲームオーバー
         if($_SESSION['myhp'] <=0){
