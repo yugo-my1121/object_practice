@@ -29,10 +29,10 @@
       if(!mt_rand(0,9)){
         $attackPoint *= 1.5;
         $attackPoint = (int)$attackPoint;
-        $_SESSION['history'] .= $this->getName().'のクリティカルヒット!!<br>';
+        History::set($this->getName().'のクリティカルヒット!!');
       }
       $_SESSION['myhp'] -= $this->attack;
-      $_SESSION['history'] .= $this->attack.'ダメージを受けた!<br>';
+      History::set($this->attack.'ダメージを受けた!');
     }
     //セッター
     public function setHp($num){
@@ -84,13 +84,26 @@
     public function attack(){
       $attackPoint = $this->attack;
       if(!mt_rand(0,4)){//5分の1の確率で魔法攻撃
-        $_SESSION['history'] .= $this->name.'の魔法攻撃!!<br>';
+        History::set($this->name.'の魔法攻撃!!');
         $_SESSION['myhp'] -= $this->magicAttack;
-        $_SESSION['history'] .= $this->magicAttack.'ポイントのダメージを受けた!<br>';
+        History::set($this->magicAttack.'ポイントのダメージを受けた!');
       }else{
         // 通常の攻撃の場合は、親クラスの攻撃メソッドを使うことで、親クラスの攻撃メソッドが修正されてもMagicMonsterでも反映される
         parent::attack();
       }
+    }
+  }
+
+  // 履歴管理クラス（インスタンス化して複数に増殖させる必要性がないクラスなので、staticにする）
+  class History{
+    public static function set($str){
+      // セッションhistoryが作られてなければ作る
+      if(empty($_SESSION['history'])) $_SESSION['history'] = '';
+      //文字列をセッションhistoryへ格納
+      $_SESSION['history'] .= $str.'<br>';
+    }
+    public static function clear(){
+      unset($_SESSION['history']);
     }
   }
 
@@ -107,12 +120,13 @@
   function createMonster(){
     global $monsters;
     $monster = $monsters[mt_rand(0,7)];
-    $_SESSION['history'] .= $monster->getName().'が現れた!<br>';
+    History::set($monster->getName().'が現れた!');
     $_SESSION['monster'] = $monster;
   }
 
   function init(){
-    $_SESSION['history'] .= '初期化します!<br>';
+    History::clear();
+    History::set('初期化します!');
     $_SESSION['knockDownCount'] = 0;
     $_SESSION['myhp'] = MY_HP;
     createMonster();
@@ -128,16 +142,16 @@
     error_log('POSTされた!');
 
     if($startFlg){
-      $_SESSION['history'] = 'ゲーム開始!';
+      History::set('ゲームスタート!');
       init();
     }else{
       if($attackFlg){
-        $_SESSION['history'] .= '攻撃した!<br>';
+        History::set('攻撃した!');
 
         //ランダムでモンスターに攻撃を与える
         $attackPoint = mt_rand(50,100);
         $_SESSION['monster']->setHp($_SESSION['monster']->getHp() - $attackPoint);
-        $_SESSION['history'] .= $attackPoint.'ポイントのダメージを与えた!<br>';
+        History::set($attackPoint.'ポイントのダメージを与えた!');
 
         //モンスターから攻撃を受ける
         $_SESSION['monster'] ->attack();
@@ -147,7 +161,7 @@
           gameOver();
         }else{
           if($_SESSION['monster']->getHp() <=0){
-            $_SESSION['history'] .= $_SESSION['monster']->getName().'を倒した!<br>';
+            History::set($_SESSION['monster']->getName().'を倒した!');
             createMonster();
             $_SESSION['knockDownCount'] = $_SESSION['knockDownCount']+1;
           }
@@ -156,7 +170,7 @@
 
 
       }else{//逃げるを押した場合
-        $_SESSION['history'] .= '逃げた!<br>';
+        History::set('逃げた!');
         createMonster();
       }
       $_POST = array();
