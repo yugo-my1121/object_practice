@@ -221,6 +221,9 @@
         //モンスターから攻撃を受ける
         $_SESSION['monster'] ->attack();
 
+        // 人が叫ぶ
+        $_SESSION['human']->sayCry();
+
         //hpが0以下になったらゲームオーバー
         if($_SESSION['human']->getHp() <= 0){
           gameOver();
