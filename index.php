@@ -122,6 +122,11 @@
     }
   }
 
+  interface HistoryInterface{
+    public function set();
+    public function clear();
+  }
+
   // 履歴管理クラス（インスタンス化して複数に増殖させる必要性がないクラスなので、staticにする）
   class History{
     public static function set($str){
