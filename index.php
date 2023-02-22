@@ -16,6 +16,7 @@
   //抽象クラス(生き物クラス)
   abstract class Creature{
     protected $name;
+    protected $maxHp;
     protected $hp;
     protected $attackMin;
     protected $attackMax;
@@ -31,6 +32,9 @@
     }
     public function getHp(){
       return $this->hp;
+    }
+    public function getMaxHp(){
+      return $this->maxHp;
     }
     public function attack($targetObj){
       $attackPoint = mt_rand($this->attackMin,$this->attackMax);
@@ -49,9 +53,10 @@
   //人クラス
   class Human extends Creature{
     protected $sex;
-    public function __construct($name,$sex,$hp,$attackMin,$attackMax){
+    public function __construct($name,$sex,$maxHp,$hp,$attackMin,$attackMax){
       $this->name = $name;
       $this->sex = $sex;
+      $this->maxHp = $maxHp;
       $this->hp = $hp;
       $this->attackMin = $attackMin;
       $this->attackMax = $attackMax;
@@ -141,7 +146,7 @@
   }
 
   //インスタンス作成
-  $human = new Human('勇者見習い', Sex::MAN, 500, 40, 120);
+  $human = new Human('勇者見習い', Sex::MAN,500, 500, 40, 120);
   $monsters[] = new Monster('フランケン',100,'img/monster01.png',20,40);
   $monsters[] = new MagicMonster('フランケンNEO',300,'img/monster02.png',20,60,mt_rand(50,100));
   $monsters[] = new Monster('ドラキュラー',200,'img/monster03.png',30,50);
@@ -166,6 +171,7 @@
     History::clear();
     History::set('初期化します!');
     $_SESSION['knockDownCount'] = 0;
+    $_SESSION['recoverCount'] = 0;
     createHuman();
     createMonster();
   }
@@ -177,6 +183,7 @@
   if(!empty($_POST)){
     $attackFlg = (!empty($_POST['attack'])) ? true : false;
     $startFlg = (!empty($_POST['start'])) ? true : false;
+    $recoverFlg = (!empty($_POST['recover'])) ? true : false;
     error_log('POSTされた!');
 
     if($startFlg){
@@ -202,6 +209,17 @@
             History::set($_SESSION['monster']->getName().'を倒した!');
             createMonster();
             $_SESSION['knockDownCount'] = $_SESSION['knockDownCount']+1;
+          }
+        }
+
+      }else if($recoverFlg){//回復するを押した場合
+        if($_SESSION['human']->getHp() < $_SESSION['human']->getMaxHp()){//最大HP以下の時に回復を実行できる
+          if($_SESSION['recoverCount']<3){
+            //勇者を回復する
+            $_SESSION['human']->setHp($_SESSION['human']->getHp()+mt_rand(10,100));
+            if($_SESSION['human']->getHp()) $_SESSION['human']->setHp($_SESSION['human']->getMaxHp());
+            //初期HPを超えていたら初期HPを入れる
+            $_SESSION['recoverCount'] += 1;
           }
         }
 
@@ -291,8 +309,10 @@
       <p style="font-size:14px; text-align:center; ">モンスターのHP:<?php echo $_SESSION['monster']->getHp();?></p>
       <p>倒したモンスター数:<?php echo  $_SESSION['knockDownCount'];?></p>
       <p>勇者の残りHP:<?php echo $_SESSION['human']->getHp();?></p>
+      <p>回復数:<?php echo $_SESSION['recoverCount'];?></p>
       <form method="post">
         <input type="submit" name="attack" value="▶︎攻撃する">
+        <input type="submit" name="recover" value="▶︎回復する">
         <input type="submit" name="escape" value="▶︎逃げる">
         <input type="submit" name="start" value="▶︎ゲームリスタート">
       </form>
